@@ -203,6 +203,73 @@ class PymerangDevice:
             channel = grpc.insecure_channel(server_address)
         return channel
 
+
+
+
+    def my_custom_run_nat_discovery(self):
+        '''
+        Not realy a NAT discovery
+        
+        To overcome NAT related STUN issues in mininet.
+
+        It Assume the NAT type is Always OPEN (All edges have WAN public IP addresses and are not behind a NAT ).
+
+        i.e. Assume that always :
+            nat_type = pynat.OPEN 
+            external_ip = nat_discovery_client_ip # FIXME Correct this ?? nat_discovery_client_ip
+            external_port = nat_discovery_client_port # FIXME Correct this ?? nat_discovery_client_port
+
+        NB: Its just For development purposes only. In production nat_type, external_ip, external_port need to be returned by the STUN server.
+        '''
+
+        
+        nat_type = pynat.OPEN
+        external_ip = self.nat_discovery_client_ip
+        external_port = self.nat_discovery_client_port
+
+        self.nat_type = nat_type
+        self.external_ip = external_ip
+        self.external_port = external_port
+        tunnel_mode = self.tunnel_state.select_tunnel_mode(nat_type)
+        self.tunnel_mode = tunnel_mode
+        logging.info('Tunnel mode selected: %s', tunnel_mode.name)
+
+
+        self.interfaces = list()
+        # Set the interfaces
+        interfaces = utils.get_local_interfaces()
+        
+        for ifname, ifinfo in interfaces.items():
+            ext_ipv4_addrs = list()
+            ext_ipv6_addrs = list()
+            if ifname != 'lo':
+
+                # Force the external IP address to be the one of the interface WAN public IP address 
+                # (not the case if the NAT type is not OPEN)
+                for addr in ifinfo['ipv4_addrs']:
+                    addr = addr.split('/')[0] 
+                    if not IPv4Address(addr).is_private:
+                        if (nat_type == pynat.OPEN) and (addr is not None):
+                                ext_ipv4_addrs.append(addr)
+
+                # Force the external IP address to be the one of the interface WAN public IP address 
+                # (not the case if the NAT type is not OPEN)
+                for addr in ifinfo['ipv6_addrs']:
+                    addr = addr.split('/')[0]
+                    if not IPv6Address(addr).is_private:
+                        if (nat_type == pynat.OPEN) and (addr is not None):
+                                ext_ipv6_addrs.append(addr)
+                        
+            # Append the interface
+            self.interfaces.append(
+                {
+                    'name': ifname,
+                    'ext_ipv4_addrs': ext_ipv4_addrs,
+                    'ext_ipv6_addrs': ext_ipv6_addrs
+                }
+            )
+
+
     def run_nat_discovery(self):
         # Run the stun test to discover the NAT type
         logging.info(
@@ -214,12 +281,15 @@ class PymerangDevice:
             self.nat_discovery_server_ip,
             self.nat_discovery_server_port
         )
+
+
         nat_type, external_ip, external_port = pynat.get_ip_info(
             self.nat_discovery_client_ip,
             self.nat_discovery_client_port,
             self.nat_discovery_server_ip,
             self.nat_discovery_server_port
         )
+
         if nat_type is None:
             logging.error('Error in STUN client')
         logging.info('NAT detected: %s', nat_type)
@@ -317,6 +387,11 @@ class PymerangDevice:
             )
         # Set the tunnel mode
         self.tunnel_mode = tunnel_mode
+
+
+
+
+
 
     def _register_device(self):
         # Establish a gRPC connection to the controller
@@ -452,7 +527,10 @@ class PymerangDevice:
                 self.tunnel_device_endpoint_configured = False
             logging.info('Management interface destroyed')
             logging.info('Starting NAT Discovery procedure')
-            self.run_nat_discovery()
+
+            # self.run_nat_discovery()
+            self.my_custom_run_nat_discovery()
+
             logging.info('NAT Discovery procedure completed')
         except OSError as err:
             logging.warning(f'NAT Discovery failed with reason "{str(err)}"')
@@ -541,7 +619,11 @@ class PymerangDevice:
             # Send the update tunnel mode request
             logging.info('Sending the update tunnel mode request')
             response = stub.UpdateMgmtInfo(request)
+
             if response.status == status_codes_pb2.STATUS_SUCCESS:
+
+                logging.info(' *** Update tunnel mode request OK ')
+
                 # Extract IP address of the controller's VTEP
                 self.controller_vtep_ip = response.mgmt_info.controller_vtep_ip
                 # Extract IP address of the device's VTEP
@@ -791,20 +873,30 @@ class PymerangDevice:
             'routine.'
         )
 
-    def run(self):
-        logging.info('Client started')
+    def run(self):        
+        logging.info('\n\n ---------------------- PymerangDevice Client started ---------------------- \n\n')
+        
         # Initialize tunnel state
         self.tunnel_state = utils.TunnelState(self.server_ip, self.debug)
         # Register the device
         if self.register_device() != status_codes_pb2.STATUS_SUCCESS:
             logging.warning('Error in device registration')
             return status_codes_pb2.STATUS_INTERNAL_ERROR
+        
+
+
         # Start NAT discovery procedure
-        self.run_nat_discovery()
+        self.my_custom_run_nat_discovery()
+        # self.run_nat_discovery()
+
+
         # Update tunnel mode
         if self.update_mgmt_info() != status_codes_pb2.STATUS_SUCCESS:
             logging.warning('Error in update tunnel mode')
             return status_codes_pb2.STATUS_INTERNAL_ERROR
+        
+        
+
         # Execute reconciliation, if required
         if self.exec_reconciliation() != status_codes_pb2.STATUS_SUCCESS:
             logging.warning('Error in reconciliation')
@@ -974,4 +1066,5 @@ if __name__ == '__main__':
         stop_event=None,
         debug=debug
     )
+
     client.run()

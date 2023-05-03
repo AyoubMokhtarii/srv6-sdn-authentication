@@ -54,7 +54,11 @@ class PymerangServicer(pymerang_pb2_grpc.PymerangServicer):
         self.controller = controller
 
     def RegisterDevice(self, request, context):
-        logging.info('New device connected: %s' % request)
+        logging.info('\n\n=-=-=-=-=-==-=-=-=-=-=-=-=-=-=-=-==-=-=-=New device connected: %s' % request)
+
+        logging.info('=-=-=-=-=-==-=-=-=-=-=-=-=-=-=-=-==-=-=-=\n\n')
+
+        
         # Get the IP address seen by the gRPC server
         # It can be used for management
         mgmtip = context.peer()
@@ -208,7 +212,9 @@ class PymerangServicer(pymerang_pb2_grpc.PymerangServicer):
         return reply
 
     def UpdateMgmtInfo(self, request, context):
-        logging.info('Establish tunnel connection: %s', request)
+        logging.info('*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_Establish tunnel connection: %s', request)
+        logging.info('*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*')
+
         # Get the IP address seen by the gRPC server
         # It can be used for management
         mgmtip = context.peer()
@@ -282,7 +288,7 @@ class PymerangServicer(pymerang_pb2_grpc.PymerangServicer):
         if vtep_mask is not None:
             reply.mgmt_info.vtep_mask = vtep_mask
         # Send the reply
-        logging.info('Sending the reply: %s' % reply)
+        logging.info('Sending the reply ( UpdateMgmtInfo ) : %s' % reply)
         return reply
 
     def UnregisterDevice(self, request, context):
@@ -300,7 +306,7 @@ class PymerangServicer(pymerang_pb2_grpc.PymerangServicer):
             return pymerang_pb2.RegisterDeviceReply(status=response)
         # Send the reply
         reply = pymerang_pb2.RegisterDeviceReply(status=STATUS_SUCCESS)
-        logging.info('Sending the reply: %s', reply)
+        logging.info('Sending the reply ( UnregisterDevice ) : %s', reply)
         return reply
 
     def KeepAlive(self, request, context):
@@ -321,7 +327,7 @@ class PymerangServicer(pymerang_pb2_grpc.PymerangServicer):
             status=STATUS_SUCCESS,
             device_state=device.get('state', DeviceState.UNKNOWN.value)
         )
-        logging.debug('Sending the reply: %s', reply)
+        logging.debug('Sending the reply (KeepAlive) : %s', reply)
         return reply
 
     def ExecReconciliation(self, request, context):
@@ -351,7 +357,7 @@ class PymerangServicer(pymerang_pb2_grpc.PymerangServicer):
                 device.get('state', DeviceState.UNKNOWN.value)
             )
         )
-        logging.debug('Sending the reply: %s', reply)
+        logging.debug('Sending the reply (ExecReconciliation): %s', reply)
         return reply
 
 
@@ -397,6 +403,7 @@ class PymerangController:
         if devices is None:
             logging.error('Cannot retrieve devices list')
             return
+
         # Iterate on the devices list
         for device in devices:
             # Get the ID of the device
@@ -802,9 +809,11 @@ class PymerangController:
         return STATUS_SUCCESS
 
     def exec_reconciliation(self, deviceid, tenantid):
+       
         if srv6_sdn_controller_state.get_device_reconciliation_flag(
                 deviceid=deviceid, tenantid=tenantid
         ):
+            
             with RollbackContext() as rollback:
                 rollback.push(
                     func=self.reconciliation_failed,

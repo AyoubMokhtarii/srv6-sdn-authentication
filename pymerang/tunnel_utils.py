@@ -3,6 +3,7 @@
 # General imports
 import logging
 import socket
+import time
 from ipaddress import IPv6Interface, IPv4Interface, AddressValueError
 # pyroute2 dependencies
 from pyroute2 import IPRoute
@@ -33,6 +34,12 @@ def delete_interface(device):
     with IPRoute() as ip_route:
         # Get interface index
         ifindex = ip_route.link_lookup(ifname=device)[0]
+
+        #FIXME remove this logging
+        print("******************************************** ifname=device :  ",device)
+        print("******************************************** ifindex :  ",ifindex)
+        time.sleep(10)
+
         # Delete link
         ip_route.link("del", index=ifindex)
 

@@ -185,7 +185,7 @@ def start_keep_alive_icmp(dst_ip, interval=10, max_lost=0,
                           stop_event=None, callback=None):
     logging.info(
         'Start sending ICMP keep alive messages to %s\n'
-        'Interval set to %s seconds',
+        'Interval set to %s seconds (icmp)',
         dst_ip,
         interval
     )
@@ -233,7 +233,7 @@ def start_keep_alive_icmp(dst_ip, interval=10, max_lost=0,
 def start_keep_alive_udp(dst_ip, dst_port, interval=30):
     logging.info(
         'Start sending UDP keep alive messages to %s port %s\n'
-        'Interval set to %s seconds',
+        'Interval set to %s seconds (udp)',
         dst_ip,
         dst_port,
         interval
@@ -282,7 +282,7 @@ def start_keep_alive_grpc(
 ):
     logging.info(
         'Start sending gRPC keep alive messages to %s\n'
-        'Interval set to %s seconds',
+        'Interval set to %s seconds (gRPC)',
         server_ip,
         interval
     )
