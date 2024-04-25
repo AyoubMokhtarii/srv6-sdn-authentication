@@ -111,6 +111,9 @@ class PymerangDevice:
             config = json.load(json_file)
         # Save the device ID
         self.deviceid = config['id']
+
+        self.edge_device_name = config['edge_device_name']
+
         # If device ID is not set in the configuration, we read it from the
         # machine UUID
         if self.deviceid == '':
@@ -406,6 +409,10 @@ class PymerangDevice:
             request = pymerang_pb2.RegisterDeviceRequest()
             # Set the device ID
             request.device.id = self.deviceid
+
+            # Set the device NAME
+            request.device.edge_device_name = self.edge_device_name
+
             # Set the token
             request.auth_data.token = self.token
             # Set the SID prefix

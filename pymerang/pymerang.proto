@@ -36,7 +36,8 @@ message AuthData {
 /* Message representing a device */
 message Device {
     string id = 1;
-    repeated Feature features = 2;
+    string edge_device_name = 2
+    repeated Feature features = 3;
 }
 
 /* Management Info */
