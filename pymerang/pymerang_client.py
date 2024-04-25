@@ -248,7 +248,7 @@ class PymerangDevice:
                 # (not the case if the NAT type is not OPEN)
                 for addr in ifinfo['ipv4_addrs']:
                     addr = addr.split('/')[0] 
-                    if not IPv4Address(addr).is_private:
+                    if not IPv4Address(addr).is_link_local: 
                         if (nat_type == pynat.OPEN) and (addr is not None):
                                 ext_ipv4_addrs.append(addr)
 
@@ -256,7 +256,7 @@ class PymerangDevice:
                 # (not the case if the NAT type is not OPEN)
                 for addr in ifinfo['ipv6_addrs']:
                     addr = addr.split('/')[0]
-                    if not IPv6Address(addr).is_private:
+                    if not IPv6Address(addr).is_link_local:
                         if (nat_type == pynat.OPEN) and (addr is not None):
                                 ext_ipv6_addrs.append(addr)
                         
