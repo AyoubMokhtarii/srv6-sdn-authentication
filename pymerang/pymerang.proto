@@ -10,7 +10,7 @@ import "pymerang/status_codes.proto";
 /* RPC methods implementing a procedure to connect a device to a controller */
 
 service Pymerang {
-  // Register a device
+  // Register a device 
   rpc RegisterDevice(RegisterDeviceRequest) returns (RegisterDeviceReply) {}
   // Update management information
   rpc UpdateMgmtInfo(RegisterDeviceRequest) returns (RegisterDeviceReply) {}
